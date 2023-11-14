@@ -1,3 +1,5 @@
+'use client';
+
 import { Download, Eye, Plus, Trash } from 'lucide-react';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '~/components/ui/card';
@@ -12,12 +14,34 @@ import {
 } from '~/components/ui/select';
 import { Textarea } from '~/components/ui/textarea';
 import { currency_symbols } from '~/lib/currency';
+import html2canvas from 'html2canvas';
+import JSPDF from 'jspdf';
 
 const currencies = Object.keys(currency_symbols);
 
+const generateInvoice = () => {
+  html2canvas(document.querySelector('#invoice')).then((canvas) => {
+    const imgData = canvas.toDataURL('image/png', 1.0);
+    const pdf = new JSPDF({
+      orientation: 'portrait',
+      unit: 'pt',
+      format: [612, 792],
+    });
+    pdf.internal.scaleFactor = 1;
+    const imgProps = pdf.getImageProperties(imgData);
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    pdf.save('invoice-001.pdf');
+  });
+};
+
 export function Invoice() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-[minmax(900px,_1fr)_320px] gap-4 p-6 lg:px-8 ">
+    <div
+      className="grid grid-cols-1 sm:grid-cols-[minmax(900px,_1fr)_320px] gap-4 p-6 lg:px-8"
+      id="invoice"
+    >
       <Card className="w-full max-w-4xl">
         <CardHeader>
           <div className="grid grid-cols-3 gap-4">
@@ -39,7 +63,9 @@ export function Invoice() {
         <CardContent className="space-y-10">
           <div className="grid grid-cols-2 gap-8">
             <div className="space-y-4">
-              <Label htmlFor="client-name">To - Client Details</Label>
+              <Label htmlFor="client-name">
+                Bill To <span className="text-xs text-muted-foreground">(Client Details)</span>
+              </Label>
               <div className="space-y-2">
                 <Input id="client-name" placeholder="Enter client's name" />
                 <Input id="client-email" placeholder="Enter client's email" type="email" />
@@ -47,7 +73,9 @@ export function Invoice() {
               </div>
             </div>
             <div className="space-y-4">
-              <Label>From - Biller Details</Label>
+              <Label>
+                Bill From <span className="text-xs text-muted-foreground">(Your Details)</span>
+              </Label>
               <div className="space-y-2">
                 <Input id="bill-from" placeholder="Enter your name" />
                 <Input id="biller-email" placeholder="Enter your email" type="email" />
@@ -109,12 +137,8 @@ export function Invoice() {
               <Label htmlFor="tax-rate">Tax Rate (%)</Label>
               <Input id="tax-rate" placeholder="Enter tax rate" type="number" />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="discount">Discount (%)</Label>
-              <Input id="discount" placeholder="Enter discount" type="number" />
-            </div>
 
-            <Button className="mt-8">
+            <Button className="mt-8" onClick={() => generateInvoice()}>
               <Download className="h-5 w-5 mr-2" />
               Download Invoice PDF
             </Button>
