@@ -1,6 +1,7 @@
 'use client';
 
-import { Download, Eye, Plus, Trash } from 'lucide-react';
+import { Download, Plus, Trash } from 'lucide-react';
+import { useRef } from 'react';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '~/components/ui/card';
 import { Input } from '~/components/ui/input';
@@ -14,41 +15,9 @@ import {
 } from '~/components/ui/select';
 import { Textarea } from '~/components/ui/textarea';
 import { currency_symbols } from '~/lib/currency';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
-import { useRef } from 'react';
+import { PreviewButton } from './preview-button';
 
 const currencies = Object.keys(currency_symbols);
-
-const print = (content: HTMLDivElement) => {
-  const mywindow = window.open('', 'PRINT', 'height=650,width=900,top=100,left=150');
-  mywindow.document.write(`<html><head><title>testTitle</title>`);
-  mywindow.document.write('</head><body >');
-  mywindow.document.write(content.innerHTML);
-  mywindow.document.write('</body></html>');
-
-  mywindow.document.close(); // necessary for IE >= 10
-  mywindow.focus(); // necessary for IE >= 10*/
-
-  mywindow.print();
-};
-
-const generateInvoice = async (content: HTMLDivElement) => {
-  const canvas = await html2canvas(content);
-
-  const img = canvas.toDataURL('image/png', 0.2);
-  const pdf = new jsPDF({
-    orientation: 'portrait',
-    unit: 'pt',
-    format: [612, 792],
-  });
-  pdf.internal.scaleFactor = 0.2;
-  const imgProps = pdf.getImageProperties(img);
-  const pdfWidth = pdf.internal.pageSize.getWidth();
-  const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-  pdf.addImage(img, 'PNG', 0, 0, pdfWidth, pdfHeight);
-  pdf.save('invoice-001.pdf');
-};
 
 export function Invoice() {
   const exportContainerRef = useRef<HTMLDivElement>(null);
@@ -130,6 +99,7 @@ export function Invoice() {
           <div className="text-lg font-semibold">Total: $0.00</div>
         </CardFooter>
       </Card>
+
       <Card>
         <CardHeader>
           <div className="grid grid-cols-1 gap-4">
@@ -153,15 +123,7 @@ export function Invoice() {
               <Input id="tax-rate" placeholder="Enter tax rate" type="number" />
             </div>
 
-            <Button className="mt-8" onClick={() => generateInvoice(exportContainerRef.current)}>
-              <Download className="h-5 w-5 mr-2" />
-              Download Invoice PDF
-            </Button>
-
-            <Button variant="outline" onClick={() => print(exportContainerRef.current)} s>
-              <Eye className="h-5 w-5 mr-2" />
-              Preview Invoice
-            </Button>
+            <PreviewButton />
           </div>
         </CardHeader>
       </Card>
